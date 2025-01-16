@@ -23,7 +23,7 @@ B	            000101XXXXX 	X	      1             x       0       x         0    
 **************************************************************************************************************/
 
 
-module control(
+module Control(
 	       output reg 	reg2loc,
 	       output reg 	alusrc,
 	       output reg 	mem2reg,

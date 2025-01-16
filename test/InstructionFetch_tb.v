@@ -45,8 +45,7 @@ module IF_tb;
         startPC = 0;
         pcsrc = 0;
         targetPC = 10;
-
-
+        
         watchdog = 0;
     
         // Wait for global reset

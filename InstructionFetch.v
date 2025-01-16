@@ -5,14 +5,15 @@ module InstructionFetch(
     output [63:0] pc_ID
     );
 
-    wire [63:0] NextPC, PC_IF;
-    wire [31:0] instruction_IF;
-
+    // Interim Registers
     reg  [63:0] pc_IF_reg;
     reg  [31:0] instruction_IF_reg;
 
-    assign NextPC = PCSrc ? TargetPC : PC_IF + 4;
+    // Interim Wires
+    wire [63:0] NextPC, PC_IF;
+    wire [31:0] instruction_IF;
 
+    assign NextPC = PCSrc ? TargetPC : PC_IF + 4;
     ProgramCounter PC(
         .clk(clk),
         .resetl(resetl),
@@ -25,6 +26,7 @@ module InstructionFetch(
         .Data(instruction_IF),
         .Address(PC_IF)
     );
+
 
     always @(posedge clk or negedge resetl) 
     begin
