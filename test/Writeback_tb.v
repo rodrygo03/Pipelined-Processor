@@ -36,8 +36,8 @@ module WB_tb;
         .RD_WB(RD_wb),
         .ALUout_WB(ALUout_wb),
         .ReadData_WB(ReadData_wb),
-        .RD(RD),
-        .MemtoRegOut(MemtoRegOut)
+        .RD_ID(RD),
+        .MemtoRegOut_ID(MemtoRegOut)
     );
 
 

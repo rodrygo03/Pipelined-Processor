@@ -1,8 +1,8 @@
 module InstructionDecode(
-    input clk, resetl, RegWrite_WB,
-    input [4:0] RD_WB,
+    input clk, resetl, RegWrite,
+    input [4:0] RD_ID,
     input [31:0] instruction_ID,
-    input [63:0] pc_ID, MemtoRegOut_WB,
+    input [63:0] pc_ID, MemtoRegOut_ID,
     output RegWrite_EX, ALUSrc_EX, Branch_EX, Uncondbranch_EX, MemRead_EX, MemWrite_EX, Mem2Reg_EX,
     output [3:0] ALUOp_EX,
     output [4:0] RD_EX,
@@ -14,7 +14,7 @@ module InstructionDecode(
     reg MemRead_ID_reg, MemWrite_ID_reg, Mem2Reg_ID_reg;
     reg [3:0] ALUOp_ID_reg;
     reg [4:0] RD_ID_reg;
-    reg [63:0] RegOutA_ID_reg, RegOutB_ID_reg, SignExtImm64_ID_reg, pc_ID_reg;
+    reg [63:0] RegOutA_reg, RegOutB_reg, SignExtImm64_ID_reg, pc_ID_reg;
 
     // Control Connections    
     wire Reg2Loc_ID, RegWrite_ID, ALUSrc_ID, Branch_ID, Uncondbranch_ID, MemRead_ID, MemWrite_ID, Mem2Reg_ID;
@@ -30,7 +30,7 @@ module InstructionDecode(
     assign rm = instruction_ID[9:5];
     assign rn = Reg2Loc_ID ? instruction_ID[4:0] : instruction_ID[20:16];
     assign opcode = instruction_ID[31:21];
-    wire [63:0] RegOutA_ID, RegOutB_ID;
+    wire [63:0] RegOutA, RegOutB;
 
     // Sign Extender Connections
     wire [63:0] SignExtImm64_ID;
@@ -50,13 +50,13 @@ module InstructionDecode(
     );
 
     RegisterFile rf(
-       .BusA(RegOutA_ID),
-       .BusB(RegOutB_ID),
-       .BusW(MemtoRegOut_WB),
+       .BusA(RegOutA),
+       .BusB(RegOutB),
+       .BusW(MemtoRegOut_ID),
        .RA(rm),
        .RB(rn),
-       .RW(RD_WB),
-       .RegWr(RegWrite_WB),
+       .RW(RD_ID),
+       .RegWr(RegWrite),
        .Clk(clk)
     );
 
@@ -79,8 +79,8 @@ module InstructionDecode(
             Mem2Reg_ID_reg <= Mem2Reg_ID;
             ALUOp_ID_reg <= ALUOp_ID;
             RD_ID_reg <= rd;
-            RegOutA_ID_reg <= RegOutA_ID;
-            RegOutB_ID_reg <= RegOutB_ID;
+            RegOutA_reg <= RegOutA;
+            RegOutB_reg <= RegOutB;
             SignExtImm64_ID_reg <= SignExtImm64_ID;
             pc_ID_reg <= pc_ID;
         end
@@ -94,8 +94,8 @@ module InstructionDecode(
             Mem2Reg_ID_reg <= 1'b0;
             ALUOp_ID_reg <= 4'b0;
             RD_ID_reg <= 5'b0;
-            RegOutA_ID_reg <= 64'b0;
-            RegOutB_ID_reg <= 64'b0;
+            RegOutA_reg <= 64'b0;
+            RegOutB_reg <= 64'b0;
             SignExtImm64_ID_reg <= 64'b0;
             pc_ID_reg <= 64'b0;
         end
@@ -110,8 +110,8 @@ module InstructionDecode(
     assign Mem2Reg_EX = Mem2Reg_ID_reg;
     assign ALUOp_EX = ALUOp_ID_reg;
     assign RD_EX = RD_ID_reg;
-    assign RegOutA_EX = RegOutA_ID_reg;
-    assign RegOutB_EX = RegOutB_ID_reg;
+    assign RegOutA_EX = RegOutA_reg;
+    assign RegOutB_EX = RegOutB_reg;
     assign SignExtImm64_EX = SignExtImm64_ID_reg; 
     assign pc_EX = pc_ID_reg;
 

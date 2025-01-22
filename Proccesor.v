@@ -1,131 +1,141 @@
 module Proccesor(
-   input 	         resetl,
-   input [63:0]      startpc,
-   output reg [63:0] currentpc,
-   output [63:0]     MemtoRegOut,  // this should be attached to the output of the MemtoReg Mux
-   input 	         CLK
-   );
+	input 	          resetl,
+	input 	          CLK,
+	input [63:0]      startpc,
+	output [63:0]     currentpc,
+	output [63:0]     MemtoRegOut  
+	);
 
-   // Next PC connections
-   wire [63:0]      nextpc;       // The next PC, to be updated on clock cycle
+	// fetch -> decode interim wires
+	wire [31:0] instruction_decode;
+	wire [63:0] pc_decode;
 
-   // Instruction Memory connections
-   wire [31:0] 	  instruction;  // The current instruction
+	// decode -> execute interim wires
+	wire regwrite_execute, alusrc_execute;
+	wire branch_execute, uncondbranch_execute;
+	wire memread_execute, memwrite_execute, mem2reg_execute;
+	wire [3:0] aluop_execute;
+	wire [4:0] rd_execute;
+	wire [63:0] regoutA_execute, regoutB_execute, signext_execute, pc_execute;
 
-   // Parts of instruction
-   wire [4:0] 		  rd;            // The destination register
-   wire [4:0] 		  rm;            // Operand 1
-   wire [4:0] 		  rn;            // Operand 2
-   wire [10:0] 	  opcode;
+	// execute -> memory interim wires
+	wire regwrite_memory, branch_memory, uncondbranch_memory, memread_memory;
+	wire memwrite_memory, mem2reg_memory, aluzero_memory;
+	wire [4:0] rd_memory;
+	wire [63:0] regoutB_memory, aluout_memory, pctarget_memory;
 
-   // Control wires
-   wire 			     reg2loc;
-   wire 			     alusrc;
-   wire 			     mem2reg;
-   wire 			     regwrite;
-   wire 			     memread;
-   wire 			     memwrite;
-   wire 			     branch;
-   wire 			     uncond_branch;
-   wire [3:0] 		  aluctrl;
-   wire [2:0] 		  signop;         // Change from 2 to 3 bit to accomodate signext for movz
+	// memory -> fetch interim wires
+	wire pcsrc_fetch;
+	wire [63:0] pctarget_fetch;
 
-   // Register file connections
-   wire [63:0] 	  regoutA;     // Output A
-   wire [63:0] 	  regoutB;     // Output B
+	// memory -> writeback interim wires
+	wire regwrite_writeback, mem2reg_writeback;
+	wire [4:0] rd_writeback;
+	wire [63:0] aluout_writeback, readdata_writeback;
 
-   // ALU connections
-   wire [63:0] 	  aluout;
-   wire 			     zero;
+	// writeback -> decode interim wires
+	wire regwrite_decode;
+	wire [4:0] rd_decode;
+	wire [63:0] memtoregout_decode;
 
-   // Sign Extender connections
-   wire [63:0] 	  extimm;
+	InstructionFetch Fetch_Cycle(
+		.clk(CLK),
+		.resetl(resetl),
+		.PCSrc(pcsrc_fetch),
+		.TargetPC(pctarget_fetch),
+		.StartPC(startpc),
+		.instruction_ID(instruction_decode),
+		.pc_ID(pc_decode)
+	);
 
-   // PC update logic
-   // always @(negedge CLK)
-   //   begin
-   //      if (resetl)
-   //        currentpc <= #3 nextpc;
-   //      else
-   //        currentpc <= #3 startpc;
-   //   end
+	InstructionDecode Decode_Cycle(
+		.clk(CLK),
+		.resetl(resetl),
+		.RegWrite(regwrite_decode),
+		.RD_ID(rd_decode),
+		.instruction_ID(instruction_decode),
+		.pc_ID(pc_decode),
+		.MemtoRegOut_ID(memtoregout_decode),
+		.RegWrite_EX(regwrite_execute),
+		.ALUSrc_EX(alusrc_execute),
+		.Branch_EX(branch_execute),
+		.Uncondbranch_EX(uncondbranch_execute),
+		.MemRead_EX(memread_execute),
+		.MemWrite_EX(memwrite_execute),
+		.Mem2Reg_EX(mem2reg_execute),
+		.ALUOp_EX(aluop_execute),
+		.RD_EX(rd_execute),
+		.RegOutA_EX(regoutA_execute),
+		.RegOutB_EX(regoutB_execute),
+		.SignExtImm64_EX(signext_execute),
+		.pc_EX(pc_execute)
+	);
 
-   // Parts of instruction
-   assign rd = instruction[4:0];
-   assign rm = instruction[9:5];
-   assign rn = reg2loc ? instruction[4:0] : instruction[20:16];
-   assign opcode = instruction[31:21];
+	Execute Execute_Cycle(
+		.clk(CLK),
+		.resetl(resetl),
+		.RegWrite_EX(regwrite_execute),
+		.ALUSrc_EX(alusrc_execute),
+		.Branch_EX(branch_execute),
+		.Uncondbranch_EX(uncondbranch_execute),
+		.MemRead_EX(memread_execute),
+		.MemWrite_EX(memwrite_execute),
+		.Mem2Reg_EX(mem2reg_execute),
+		.ALUOp_EX(aluop_execute),
+		.RD_EX(rd_execute),
+		.RegOutA_EX(regoutA_execute),
+		.RegOutB_EX(regoutB_execute),
+		.SignExtImm64_EX(signext_execute),
+		.pc_EX(pc_execute),
+		.RegWrite_MEM(regwrite_memory),
+		.Branch_MEM(branch_memory),
+		.Uncondbranch_MEM(uncondbranch_memory),
+		.MemRead_MEM(memread_memory),
+		.MemWrite_MEM(memwrite_memory),
+		.Mem2Reg_MEM(mem2reg_memory),
+		.ALUzero_MEM(aluzero_memory),
+		.RD_MEM(rd_memory),
+		.RegOutB_MEM(regoutB_memory),
+		.ALUout_MEM(aluout_memory),
+		.PCtarget_MEM(pctarget_memory)
+	);
 
-   // InstructionMemory imem(
-	// 		  .Data(instruction),
-	// 		  .Address(currentpc)
-	// 		  );
+	Memory Memory_Cycle(
+		.clk(CLK),
+		.resetl(resetl),
+		.ALUzero_MEM(aluzero_memory),
+		.RegWrite_MEM(regwrite_memory),
+		.Branch_MEM(branch_memory),
+		.Uncondbranch_MEM(uncondbranch_memory),
+		.MemRead_MEM(memread_memory),
+		.MemWrite_MEM(memwrite_memory),
+		.Mem2Reg_MEM(mem2reg_memory),
+		.RD_MEM(rd_memory),
+		.RegOutB_MEM(regoutB_memory),
+		.ALUout_MEM(aluout_memory),
+		.PCtarget_MEM(pctarget_memory),
+		.PCSrc(pcsrc_fetch),
+		.RegWrite_WB(regwrite_writeback),
+		.Mem2Reg_WB(mem2reg_writeback),
+		.RD_WB(rd_writeback),
+		.ALUout_WB(aluout_writeback),
+		.ReadData_WB(readdata_writeback),
+		.PCtarget(pctarget_fetch)
+	);
 
-   control control(
-		   .reg2loc(reg2loc),
-		   .alusrc(alusrc),
-		   .mem2reg(mem2reg),
-		   .regwrite(regwrite),
-		   .memread(memread),
-		   .memwrite(memwrite),
-		   .branch(branch),
-		   .uncond_branch(uncond_branch),
-		   .aluop(aluctrl),
-		   .signop(signop),
-		   .opcode(opcode)
-		);
+	Writeback Writeback_Cycle(
+		.clk(CLK),
+		.resetl(resetl),
+		.Mem2Reg_WB(mem2reg_writeback),
+		.RD_WB(rd_writeback),
+		.ALUout_WB(aluout_writeback),
+		.ReadData_WB(readdata_writeback),
+		.RegWrite_ID(regwrite_decode),
+		.RD_ID(rd_decode),
+		.MemtoRegOut_ID(memtoregout_decode)
+	);
 
-   /*
-    * Connect the remaining datapath elements below.
-    * Do not forget any additional multiplexers that may be required.
-    */
-
-    NextPClogic nextPCl(
-       .CurrentPC(currentpc),
-       .SignExtImm64(extimm),
-       .Branch(branch),
-       .ALUZero(zero),
-       .Uncondbranch(uncond_branch),
-       .NextPC(nextpc)
-    );
-
-    RegisterFile rf(
-       .BusA(regoutA),
-       .BusB(regoutB),
-       .BusW(MemtoRegOut),
-       .RA(rm),
-       .RB(rn),
-       .RW(rd),
-       .RegWr(regwrite),
-       .Clk(CLK)
-    );
-
-    SignExtender signext(
-       .BusImm(extimm),
-       .Imm26(instruction[25:0]),
-       .Ctrl(signop)
-    );
-
-    wire[63:0]  aluBin; 
-    assign aluBin = alusrc ? extimm : regoutB;      // Mux regfile to ALU(to data memory)
-    ALU alu(
-       .BusW(aluout),
-       .BusA(regoutA),
-       .BusB(aluBin),
-       .ALUCtrl(aluctrl),
-       .Zero(zero)
-    );
-
-    wire[63:0] readdata;    
-    DataMemory datamemory(
-       .WriteData(regoutB),
-       .Address(aluout),
-       .Clock(CLK),
-       .MemoryRead(memread),
-       .MemoryWrite(memwrite),
-       .ReadData(readdata)
-    );
-    assign MemtoRegOut = mem2reg ? readdata : aluout;    // Mux data memory to regfile
-
+	assign currentpc = pc_decode;
+	assign MemtoRegOut = memtoregout_decode;
 
 endmodule
