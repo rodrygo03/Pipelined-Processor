@@ -43,12 +43,12 @@ module ProccesorTest_v;
     wire [63:0] 	  currentPC;
 
     // Instantiate the Unit Under Test (UUT)
-    Proccesor uut (
-            .CLK(CLK),
-            .resetl(Reset_L),
-            .startpc(startPC),
-            .currentpc(currentPC),
-            .MemtoRegOut(MemtoRegOut)
+    Proccesor UUT (
+        .CLK(CLK),
+        .resetl(Reset_L),
+        .startpc(startPC),
+        .currentpc(currentPC),
+        .MemtoRegOut(MemtoRegOut)
     );
 
     initial begin
@@ -79,13 +79,13 @@ module ProccesorTest_v;
         // cycles.
         // ***********************************************************
 
-        while (currentPC < 64'h010)
+        while (currentPC < 64'h01C)
         begin
         @(posedge CLK);
         @(negedge CLK);
             $display("CurrentPC:%h",currentPC);
         end
-        passTest(MemtoRegOut, 64'hF, "Results of Program 1", passed);
+        passTest(MemtoRegOut, 30, "Results of Program 1", passed);
 
         // ***********************************************************
         // while (currentPC < 64'h054)
@@ -98,7 +98,7 @@ module ProccesorTest_v;
         // ***********************************************************         
 
         // Done
-        allPassed(passed, 2);   // Be sure to change the one to match
+        // allPassed(passed, 2);   // Be sure to change the one to match
         // the number of tests you add.
         $finish;
     end

@@ -128,6 +128,7 @@ module Proccesor(
 		.resetl(resetl),
 		.Mem2Reg_WB(mem2reg_writeback),
 		.RD_WB(rd_writeback),
+		.RegWrite_WB(regwrite_writeback),
 		.ALUout_WB(aluout_writeback),
 		.ReadData_WB(readdata_writeback),
 		.RegWrite_ID(regwrite_decode),

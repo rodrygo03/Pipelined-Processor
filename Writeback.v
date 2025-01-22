@@ -7,8 +7,8 @@ module Writeback(
     output [63:0] MemtoRegOut_ID
     );
 
-    assign RegWrite_ID = RegWrite_WB;
-    assign RD_ID = RD_WB;
-    assign MemtoRegOut_ID = Mem2Reg_WB ? ReadData_WB : ALUout_WB;
+    assign RD_ID = resetl ? RD_WB : 1'b0;
+    assign RegWrite_ID = resetl ? RegWrite_WB : 1'b0;
+    assign MemtoRegOut_ID = resetl ? (Mem2Reg_WB ? ReadData_WB : ALUout_WB) : 64'b0;
 
 endmodule

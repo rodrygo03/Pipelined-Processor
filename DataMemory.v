@@ -29,17 +29,17 @@ module DataMemory(ReadData , Address , WriteData , MemoryRead , MemoryWrite , Cl
    endtask
 
 
-   initial
-      begin
-         // preseting some data in the data memory used by test #1
-         // Address 0x0 gets 0x1
-         initset( 64'h0,  64'h1);  //Counter variable
-         initset( 64'h8,  64'ha);  //Part of mask
-         initset( 64'h10, 64'h5);  //Other part of mask
-         initset( 64'h18, 64'h0ffbea7deadbeeff); //big constant
-         initset( 64'h20, 64'h0); //clearing space
-         // Add any data you need for your tests here.
-      end
+   // initial
+   //    begin
+   //       // preseting some data in the data memory used by test #1
+   //       // Address 0x0 gets 0x1
+   //       initset( 64'h0,  64'h1);  //Counter variable
+   //       initset( 64'h8,  64'ha);  //Part of mask
+   //       initset( 64'h10, 64'h5);  //Other part of mask
+   //       initset( 64'h18, 64'h0ffbea7deadbeeff); //big constant
+   //       initset( 64'h20, 64'h0); //clearing space
+   //       // Add any data you need for your tests here.
+   //    end
 
 
    // This always block reads the data memory and places a double word
