@@ -2,10 +2,12 @@ module Memory(
     input clk, resetl, ALUzero_MEM, 
     input RegWrite_MEM, Branch_MEM, Uncondbranch_MEM, MemRead_MEM, MemWrite_MEM, Mem2Reg_MEM,
     input [4:0] RD_MEM,
-    input [63:0] RegOutB_MEM, ALUout_MEM, PCtarget_MEM,
+    input [63:0] RegOutB_MEM, ALUout_MEM, PCtarget_MEM, pc_MEM,
     output PCSrc, Mem2Reg_WB, RegWrite_WB,
     output [4:0] RD_WB,
-    output [63:0] ALUout_WB, ReadData_WB, PCtarget
+    output [63:0] ALUout_WB, ReadData_WB, PCtarget,
+    output branch_taken_MEM,
+    output [63:0] pc_MEM_out
     );
 
     // Interim Reg
@@ -49,5 +51,7 @@ module Memory(
     assign RegWrite_WB = RegWrite_MEM_reg;
     assign ReadData_WB = ReadData_MEM_reg;
     assign PCSrc = Uncondbranch_MEM || (ALUzero_MEM && Branch_MEM);
+    assign branch_taken_MEM = Uncondbranch_MEM || (ALUzero_MEM && Branch_MEM);
+    assign pc_MEM_out = pc_MEM;
 
 endmodule

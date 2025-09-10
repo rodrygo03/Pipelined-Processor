@@ -85,6 +85,15 @@ module ProccesorTest_v;
         @(negedge CLK);
             $display("CurrentPC:%h",currentPC);
         end
+        
+        // Wait a few more clock cycles for pipeline to complete writeback
+        @(posedge CLK);
+        @(negedge CLK);
+        @(posedge CLK);
+        @(negedge CLK);
+        @(posedge CLK);
+        @(negedge CLK);
+        
         passTest(MemtoRegOut, 30, "Results of Program 1", passed);
 
         // ***********************************************************

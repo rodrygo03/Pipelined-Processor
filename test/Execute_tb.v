@@ -24,14 +24,17 @@ module EX_tb;
     reg CLK, Reset_L, RegWrite_ex, ALUSrc_ex;
     reg Branch_ex, Uncondbranch_ex, MemRead_ex, MemWrite_ex, Mem2Reg_ex;
     reg [3:0] ALUOp_ex;
-    reg [4:0] RD_ex;
+    reg [4:0] RD_ex, rm_ex, rn_ex;
     reg [63:0] RegOutA_ex, RegOutB_ex, SignExtImm64_ex, pc_ex;
+    reg [63:0] aluout_mem, memtoregout_wb;
+    reg regwrite_wb;
+    reg [4:0] rd_wb;
     
     // outputs
     wire RegWrite_mem, Branch_mem, Uncondbranch_mem, MemRead_mem, MemWrite_mem, Mem2Reg_mem;
     wire ALUzero_mem;
     wire [4:0] RD_mem;
-    wire [63:0] RegOutB_mem, ALUout_mem, PCtarget_mem;
+    wire [63:0] RegOutB_mem, ALUout_mem, PCtarget_mem, pc_mem;
 
     Execute UUT(
         .clk(CLK),
@@ -45,10 +48,16 @@ module EX_tb;
         .Mem2Reg_EX(Mem2Reg_ex),
         .ALUOp_EX(ALUOp_ex),
         .RD_EX(RD_ex),
+        .rm_EX(rm_ex),
+        .rn_EX(rn_ex),
         .RegOutA_EX(RegOutA_ex),
         .RegOutB_EX(RegOutB_ex),
         .SignExtImm64_EX(SignExtImm64_ex),
         .pc_EX(pc_ex),
+        .aluout_MEM(aluout_mem),
+        .memtoregout_WB(memtoregout_wb),
+        .regwrite_WB(regwrite_wb),
+        .rd_WB(rd_wb),
         .RegWrite_MEM(RegWrite_mem),
         .Branch_MEM(Branch_mem),
         .Uncondbranch_MEM(Uncondbranch_mem),
@@ -59,7 +68,8 @@ module EX_tb;
         .RD_MEM(RD_mem),
         .RegOutB_MEM(RegOutB_mem),
         .ALUout_MEM(ALUout_mem),
-        .PCtarget_MEM(PCtarget_mem)
+        .PCtarget_MEM(PCtarget_mem),
+        .pc_MEM(pc_mem)
     );
 
     initial begin
@@ -74,10 +84,16 @@ module EX_tb;
         Mem2Reg_ex = 0;
         ALUOp_ex = 0;
         RD_ex = 0;
+        rm_ex = 0;
+        rn_ex = 0;
         RegOutA_ex = 0;
         RegOutB_ex = 0;
         SignExtImm64_ex = 0;
         pc_ex = 0;
+        aluout_mem = 0;
+        memtoregout_wb = 0;
+        regwrite_wb = 0;
+        rd_wb = 0;
 
         // Wait for global reset
         #(1 * `ClockPeriod);

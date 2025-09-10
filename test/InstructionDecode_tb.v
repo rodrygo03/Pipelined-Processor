@@ -21,7 +21,7 @@ module ID_tb;
     end
 
     // inputs
-    reg CLK, Reset_L, regwrite_wb;
+    reg CLK, Reset_L, regwrite_wb, pc_stall, id_bubble;
     reg [4:0] destination_register_wb;
     reg [31:0] instruction_id;
     reg [63:0] pc_id, memtoregout_wb;
@@ -29,7 +29,7 @@ module ID_tb;
     // outputs
     wire RegWrite_EX, ALUSrc_EX, Branch_EX, Uncondbranch_EX, MemRead_EX, MemWrite_EX, Mem2Reg_EX;
     wire [3:0] ALUOp_EX;
-    wire [4:0] RD_EX;
+    wire [4:0] RD_EX, rm_EX, rn_EX;
     wire [63:0] RegOutA_EX, RegOutB_EX, SignExtImm64_EX, pc_EX;
 
     // 
@@ -41,6 +41,8 @@ module ID_tb;
         .instruction_ID(instruction_id),
         .pc_ID(pc_id),
         .MemtoRegOut_ID(memtoregout_wb),
+        .pc_stall(pc_stall),
+        .id_bubble(id_bubble),
         .RegWrite_EX(RegWrite_EX),
         .ALUSrc_EX(ALUSrc_EX),
         .Branch_EX(Branch_EX),
@@ -50,6 +52,8 @@ module ID_tb;
         .Mem2Reg_EX(Mem2Reg_EX),
         .ALUOp_EX(ALUOp_EX),
         .RD_EX(RD_EX),
+        .rm_EX(rm_EX),
+        .rn_EX(rn_EX),
         .RegOutA_EX(RegOutA_EX),
         .RegOutB_EX(RegOutB_EX),
         .SignExtImm64_EX(SignExtImm64_EX),
@@ -63,6 +67,8 @@ module ID_tb;
         destination_register_wb = 0;
         memtoregout_wb = 0;
         pc_id = 0;
+        pc_stall = 0;
+        id_bubble = 0;
         // Wait for global reset
         #(1 * `ClockPeriod);
         #1

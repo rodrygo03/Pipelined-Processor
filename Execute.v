@@ -1,33 +1,59 @@
 module Execute(
     input clk, resetl, RegWrite_EX, ALUSrc_EX, Branch_EX, Uncondbranch_EX, MemRead_EX, MemWrite_EX, Mem2Reg_EX,
     input [3:0] ALUOp_EX,
-    input [4:0] RD_EX,
+    input [4:0] RD_EX, rm_EX, rn_EX,
     input [63:0] RegOutA_EX, RegOutB_EX, SignExtImm64_EX, pc_EX,
+    input [63:0] aluout_MEM, memtoregout_WB,
+    input regwrite_WB,
+    input [4:0] rd_WB,
     output RegWrite_MEM, Branch_MEM, Uncondbranch_MEM, MemRead_MEM, MemWrite_MEM, Mem2Reg_MEM,
     output ALUzero_MEM, 
     output [4:0] RD_MEM,
-    output [63:0] RegOutB_MEM, ALUout_MEM, PCtarget_MEM
+    output [63:0] RegOutB_MEM, ALUout_MEM, PCtarget_MEM, pc_MEM
     );
 
     // Interim Reg
     reg RegWrite_EX_reg, Branch_EX_reg, Uncondbranch_EX_reg, MemRead_EX_reg, MemWrite_EX_reg, Mem2Reg_EX_reg;
     reg ALUzero_EX_reg;
     reg [4:0] RD_EX_reg;
-    reg [63:0] RegOutB_EX_reg, ALUout_EX_reg, PCtarget_EX_reg;
+    reg [63:0] RegOutB_EX_reg, ALUout_EX_reg, PCtarget_EX_reg, pc_EX_reg;
 
     // PC target for branching
     wire [63:0] target;
     assign target = pc_EX + SignExtImm64_EX;
 
+    // Forwarding Unit connections
+    wire [1:0] forward_A, forward_B;
+    wire [63:0] forwarded_A, forwarded_B;
+    
+    ForwardingUnit forwarding_unit(
+        .rm_EX(rm_EX),
+        .rn_EX(rn_EX),
+        .rd_MEM(RD_MEM),
+        .rd_WB(rd_WB),
+        .regwrite_MEM(RegWrite_MEM),
+        .regwrite_WB(regwrite_WB),
+        .forward_A(forward_A),
+        .forward_B(forward_B)
+    );
+    
+    assign forwarded_A = (forward_A == 2'b10) ? aluout_MEM :
+                        (forward_A == 2'b01) ? memtoregout_WB :
+                        RegOutA_EX;
+    
+    assign forwarded_B = (forward_B == 2'b10) ? aluout_MEM :
+                        (forward_B == 2'b01) ? memtoregout_WB :
+                        RegOutB_EX;
+    
     // ALU Connections
     wire zero;
     wire [63:0] aluout;
     wire [63:0] aluBin;
-    assign aluBin = ALUSrc_EX ? SignExtImm64_EX : RegOutB_EX;
+    assign aluBin = ALUSrc_EX ? SignExtImm64_EX : forwarded_B;
 
     ALU alu(
         .BusW(aluout),
-        .BusA(RegOutA_EX),
+        .BusA(forwarded_A),
         .BusB(aluBin),
         .ALUCtrl(ALUOp_EX),
         .Zero(zero)
@@ -48,6 +74,7 @@ module Execute(
             RegOutB_EX_reg <= RegOutB_EX;
             ALUout_EX_reg <= aluout;
             PCtarget_EX_reg <= target;
+            pc_EX_reg <= pc_EX;
         end
         else begin
             RegWrite_EX_reg <= 1'b0;
@@ -61,6 +88,7 @@ module Execute(
             RegOutB_EX_reg <= 64'b0;
             ALUout_EX_reg <= 64'b0;
             PCtarget_EX_reg <= 64'b0;
+            pc_EX_reg <= 64'b0;
         end
     end
 
@@ -75,5 +103,6 @@ module Execute(
     assign RegOutB_MEM = RegOutB_EX_reg;
     assign ALUout_MEM = ALUout_EX_reg;
     assign PCtarget_MEM = PCtarget_EX_reg;
+    assign pc_MEM = pc_EX_reg;
 
 endmodule

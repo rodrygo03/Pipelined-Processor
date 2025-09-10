@@ -3,9 +3,10 @@ module InstructionDecode(
     input [4:0] RD_ID,
     input [31:0] instruction_ID,
     input [63:0] pc_ID, MemtoRegOut_ID,
+    input pc_stall, id_bubble,
     output RegWrite_EX, ALUSrc_EX, Branch_EX, Uncondbranch_EX, MemRead_EX, MemWrite_EX, Mem2Reg_EX,
     output [3:0] ALUOp_EX,
-    output [4:0] RD_EX,
+    output [4:0] RD_EX, rm_EX, rn_EX,
     output [63:0] RegOutA_EX, RegOutB_EX, SignExtImm64_EX, pc_EX
     );
 
@@ -13,7 +14,7 @@ module InstructionDecode(
     reg RegWrite_ID_reg, ALUSrc_ID_reg, Branch_ID_reg, Uncondbranch_ID_reg;
     reg MemRead_ID_reg, MemWrite_ID_reg, Mem2Reg_ID_reg;
     reg [3:0] ALUOp_ID_reg;
-    reg [4:0] RD_ID_reg;
+    reg [4:0] RD_ID_reg, rm_ID_reg, rn_ID_reg;
     reg [63:0] RegOutA_reg, RegOutB_reg, SignExtImm64_ID_reg, pc_ID_reg;
 
     // Control Connections    
@@ -70,19 +71,39 @@ module InstructionDecode(
     always @(posedge clk or negedge resetl) 
     begin
         if(resetl) begin
-            RegWrite_ID_reg <= RegWrite_ID;
-            ALUSrc_ID_reg <= ALUSrc_ID;
-            Branch_ID_reg <= Branch_ID;
-            Uncondbranch_ID_reg <= Uncondbranch_ID;
-            MemRead_ID_reg <= MemRead_ID;
-            MemWrite_ID_reg <= MemWrite_ID;
-            Mem2Reg_ID_reg <= Mem2Reg_ID;
-            ALUOp_ID_reg <= ALUOp_ID;
-            RD_ID_reg <= rd;
-            RegOutA_reg <= RegOutA;
-            RegOutB_reg <= RegOutB;
-            SignExtImm64_ID_reg <= SignExtImm64_ID;
-            pc_ID_reg <= pc_ID;
+            if (id_bubble) begin
+                RegWrite_ID_reg <= 1'b0;
+                ALUSrc_ID_reg <= 1'b0;
+                Branch_ID_reg <= 1'b0;
+                Uncondbranch_ID_reg <= 1'b0;
+                MemRead_ID_reg <= 1'b0;
+                MemWrite_ID_reg <= 1'b0;
+                Mem2Reg_ID_reg <= 1'b0;
+                ALUOp_ID_reg <= 4'b0;
+                RD_ID_reg <= 5'b0;
+                rm_ID_reg <= 5'b0;
+                rn_ID_reg <= 5'b0;
+                RegOutA_reg <= 64'b0;
+                RegOutB_reg <= 64'b0;
+                SignExtImm64_ID_reg <= 64'b0;
+                pc_ID_reg <= 64'b0;
+            end else begin
+                RegWrite_ID_reg <= RegWrite_ID;
+                ALUSrc_ID_reg <= ALUSrc_ID;
+                Branch_ID_reg <= Branch_ID;
+                Uncondbranch_ID_reg <= Uncondbranch_ID;
+                MemRead_ID_reg <= MemRead_ID;
+                MemWrite_ID_reg <= MemWrite_ID;
+                Mem2Reg_ID_reg <= Mem2Reg_ID;
+                ALUOp_ID_reg <= ALUOp_ID;
+                RD_ID_reg <= rd;
+                rm_ID_reg <= rm;
+                rn_ID_reg <= rn;
+                RegOutA_reg <= RegOutA;
+                RegOutB_reg <= RegOutB;
+                SignExtImm64_ID_reg <= SignExtImm64_ID;
+                pc_ID_reg <= pc_ID;
+            end
         end
         else begin
             RegWrite_ID_reg <= 1'b0;
@@ -94,6 +115,8 @@ module InstructionDecode(
             Mem2Reg_ID_reg <= 1'b0;
             ALUOp_ID_reg <= 4'b0;
             RD_ID_reg <= 5'b0;
+            rm_ID_reg <= 5'b0;
+            rn_ID_reg <= 5'b0;
             RegOutA_reg <= 64'b0;
             RegOutB_reg <= 64'b0;
             SignExtImm64_ID_reg <= 64'b0;
@@ -110,6 +133,8 @@ module InstructionDecode(
     assign Mem2Reg_EX = Mem2Reg_ID_reg;
     assign ALUOp_EX = ALUOp_ID_reg;
     assign RD_EX = RD_ID_reg;
+    assign rm_EX = rm_ID_reg;
+    assign rn_EX = rn_ID_reg;
     assign RegOutA_EX = RegOutA_reg;
     assign RegOutB_EX = RegOutB_reg;
     assign SignExtImm64_EX = SignExtImm64_ID_reg; 

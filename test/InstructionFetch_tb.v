@@ -21,7 +21,7 @@ module IF_tb;
     end
 
     // inputs
-    reg CLK, Reset_L, pcsrc;
+    reg CLK, Reset_L, pcsrc, pc_stall;
     reg [63:0] targetPC, startPC;
     reg [15:0] watchdog;
     
@@ -36,6 +36,9 @@ module IF_tb;
         .PCSrc(pcsrc),
         .TargetPC(targetPC),
         .StartPC(startPC),
+        .pc_stall(pc_stall),
+        .branch_taken_MEM(1'b0),
+        .pc_MEM(64'b0),
         .instruction_ID(instructionID),
         .pc_ID(pcID)
     );
@@ -44,6 +47,7 @@ module IF_tb;
         Reset_L = 0;
         startPC = 0;
         pcsrc = 0;
+        pc_stall = 0;
         targetPC = 10;
         
         watchdog = 0;
